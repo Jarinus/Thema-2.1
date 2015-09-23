@@ -1,5 +1,9 @@
 package nl.hanze;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -11,8 +15,10 @@ import org.w3c.dom.NodeList;
  *
  */
 public class DatabaseHandler {
+	Connection connection;
+	
 	public DatabaseHandler() {
-		
+		connection = getConnection();
 	}
 	
 	public void writeToDatabase(Document xmlData) {
@@ -27,7 +33,31 @@ public class DatabaseHandler {
 			if(node.getNodeType() == Node.ELEMENT_NODE) {
 				Element element = (Element) node;
 				
-				//Save data to Database.
+				String insertQuery = "";
+				
+				insertQuery += "INSERT INTO weatherdata(stn, date, \"time\", temp, dewp, stp, slp, visib, prcp, sndp, frshtt, cldc, wnddir, wdsp) VALUES (";
+				insertQuery += element.getElementsByTagName("STN").item(0).getTextContent() + ", ";
+				insertQuery += "\'" + element.getElementsByTagName("DATE").item(0).getTextContent() + "\', ";
+				insertQuery += "\'" + element.getElementsByTagName("TIME").item(0).getTextContent() + "\', ";
+				insertQuery += element.getElementsByTagName("TEMP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("DEWP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("STP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("SLP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("VISIB").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("PRCP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("SNDP").item(0).getTextContent() + ", ";
+				insertQuery += "B\'" + element.getElementsByTagName("FRSHTT").item(0).getTextContent() + "\', ";
+				insertQuery += element.getElementsByTagName("CLDC").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("WNDDIR").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("WDSP").item(0).getTextContent();
+				insertQuery += ");";
+				
+				try {
+					Statement statement = connection.createStatement();
+					statement.executeUpdate(insertQuery);
+				} catch (Exception e) {
+					System.err.println(e);
+				}
 			}
 		}
 	}
@@ -59,6 +89,17 @@ public class DatabaseHandler {
 				System.out.println("CLDC: " + element.getElementsByTagName("CLDC").item(0).getTextContent());
 				System.out.println("WNDDIR: " + element.getElementsByTagName("WNDDIR").item(0).getTextContent());
 			}
+		}
+	}
+	
+	private Connection getConnection() {
+		String  url = "jdbc:postgresql://localhost/leertaak1",
+				user = "postgres",
+				pass = "root";
+		try {
+			return DriverManager.getConnection(url, user, pass);
+		} catch (Exception e) {
+			return null;
 		}
 	}
 }

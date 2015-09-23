@@ -26,7 +26,7 @@ public class IncomingDataHandler implements Runnable {
 	public void run() {
 		String input = getInputFromConnection();
 		Document document = getXMLFromString(input);
-		Server.databaseHandler.printDataFromXML(document);
+		Server.databaseHandler.writeToDatabase(document);
 	}
 	
 	private String getInputFromConnection() {
