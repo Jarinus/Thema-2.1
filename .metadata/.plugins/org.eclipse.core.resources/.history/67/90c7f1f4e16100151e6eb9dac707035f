@@ -2,10 +2,8 @@ package nl.hanze;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.Statement;
 
-import org.postgresql.util.PSQLException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -35,62 +33,35 @@ public class DatabaseHandler {
 			if(node.getNodeType() == Node.ELEMENT_NODE) {
 				Element element = (Element) node;
 				
-				String insertQuery = getInsertQuery(element);
+				String insertQuery = "";
+				
+				insertQuery += "INSERT INTO weatherdata(stn, date, \"time\", temp, dewp, stp, slp, visib, prcp, sndp, frshtt, cldc, wnddir, wdsp) VALUES (";
+				insertQuery += element.getElementsByTagName("STN").item(0).getTextContent() + ", ";
+				insertQuery += "\'" + element.getElementsByTagName("DATE").item(0).getTextContent() + "\', ";
+				insertQuery += "\'" + element.getElementsByTagName("TIME").item(0).getTextContent() + "\', ";
+				insertQuery += element.getElementsByTagName("TEMP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("DEWP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("STP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("SLP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("VISIB").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("PRCP").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("SNDP").item(0).getTextContent() + ", ";
+				insertQuery += "B\'" + element.getElementsByTagName("FRSHTT").item(0).getTextContent() + "\', ";
+				insertQuery += element.getElementsByTagName("CLDC").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("WNDDIR").item(0).getTextContent() + ", ";
+				insertQuery += element.getElementsByTagName("WDSP").item(0).getTextContent();
+				insertQuery += ");";
+				
+				System.out.println(insertQuery);
 				
 				try {
 					Statement statement = connection.createStatement();
 					statement.executeUpdate(insertQuery);
-				} catch (PSQLException pe) {
-					//Do nothing.
 				} catch (Exception e) {
 					System.err.println(e);
 				}
 			}
 		}
-	}
-	
-	private String getInsertQuery(Element element) {
-		//Initialize.
-		String insertQuery = "";
-		String[] tagName = {"STN", "DATE", "TIME", "TEMP", "DEWP", "STP",
-							"SLP", "VISIB", "PRCP", "SNDP", "FRSHTT", "CLDC",
-							"WNDDIR", "WDSP"};
-		String[] elements = new String[14];
-		
-		//Check for missing data.
-		String temp = null;
-		for(int i = 0; i < tagName.length; i++) {
-			temp = element.getElementsByTagName(tagName[i]).item(0).getTextContent();
-			if(temp != null)
-				elements[i] = temp;
-			else {
-				try {
-					Statement statement = connection.createStatement();
-					ResultSet result = statement.executeQuery("SELECT min(" + tagName[i].toLowerCase() + ") FROM weatherdata;");
-					elements[i] = result.getString(0);
-				} catch (Exception e) {
-					System.err.println(e);
-				}
-			}
-		}
-		
-		//Create the insert query.
-		insertQuery += "INSERT INTO weatherdata(stn, date, \"time\", temp, dewp, stp, slp, visib, prcp, sndp, frshtt, cldc, wnddir, wdsp) VALUES (";
-		for(int i = 0; i < elements.length; i++) {
-			if(i == 1)
-				insertQuery += "\'" + elements[i] + "\', ";
-			else if(i == 2)
-				insertQuery += "\'" + elements[i] + "\', ";
-			else if(i == 10)
-				insertQuery += "B\'" + elements[i] + "\', ";
-			else if(i == 13)
-				insertQuery += elements[i];
-			else
-				insertQuery += elements[i] + ", ";
-		}
-		insertQuery += ");";
-		
-		return insertQuery;
 	}
 	
 	public void printDataFromXML(Document document) {

@@ -50,14 +50,12 @@ public class DatabaseHandler {
 	}
 	
 	private String getInsertQuery(Element element) {
-		//Initialize.
 		String insertQuery = "";
 		String[] tagName = {"STN", "DATE", "TIME", "TEMP", "DEWP", "STP",
 							"SLP", "VISIB", "PRCP", "SNDP", "FRSHTT", "CLDC",
 							"WNDDIR", "WDSP"};
 		String[] elements = new String[14];
 		
-		//Check for missing data.
 		String temp = null;
 		for(int i = 0; i < tagName.length; i++) {
 			temp = element.getElementsByTagName(tagName[i]).item(0).getTextContent();
@@ -74,7 +72,6 @@ public class DatabaseHandler {
 			}
 		}
 		
-		//Create the insert query.
 		insertQuery += "INSERT INTO weatherdata(stn, date, \"time\", temp, dewp, stp, slp, visib, prcp, sndp, frshtt, cldc, wnddir, wdsp) VALUES (";
 		for(int i = 0; i < elements.length; i++) {
 			if(i == 1)
@@ -89,6 +86,8 @@ public class DatabaseHandler {
 				insertQuery += elements[i] + ", ";
 		}
 		insertQuery += ");";
+		
+		System.out.println(insertQuery);
 		
 		return insertQuery;
 	}

@@ -50,7 +50,7 @@ public class DatabaseHandler {
 	}
 	
 	private String getInsertQuery(Element element) {
-		//Initialize.
+		//Initialize;
 		String insertQuery = "";
 		String[] tagName = {"STN", "DATE", "TIME", "TEMP", "DEWP", "STP",
 							"SLP", "VISIB", "PRCP", "SNDP", "FRSHTT", "CLDC",
