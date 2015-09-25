@@ -1,0 +1,37 @@
+package nl.jgermeraad;
+
+import java.util.concurrent.Semaphore;
+
+public class Bridge {
+	private static Object bridge = new Object();
+	
+	public static void main(String[] args) {
+		new Farmer("Southern Tunbridge farmer").run();
+		new Farmer("Northern Tunbridge farmer").run();
+	}
+	
+	private static class Farmer implements Runnable {
+		private int sleepTime = 1000;
+		private String name;
+		
+		public Farmer(String name) {
+			this.name = name;
+		}
+		
+		public void run() {
+			while(true) {
+				synchronized(bridge) {
+					if(available.tryAcquire()) {
+						try {
+							System.out.println(name + " is crossing the bridge.");
+							Thread.sleep(sleepTime);
+							available.release();
+						} catch (Exception e) {
+							System.err.println(e);
+						}
+					}
+				}
+			}
+		}
+	}
+}

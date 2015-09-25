@@ -1,0 +1,21 @@
+package nl.jgermeraad;
+
+public class Test {
+	private Object lock;
+	
+	public Test() {
+		lock = new Object();
+		new Thread(new TestThread()).start();
+		new Thread(new TestThread()).start();
+	}
+	
+	private class TestThread implements Runnable {
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+}

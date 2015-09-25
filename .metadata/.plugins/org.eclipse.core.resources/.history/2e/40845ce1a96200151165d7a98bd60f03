@@ -1,0 +1,23 @@
+package nl.jgermeraad;
+
+import java.util.concurrent.Semaphore;
+
+public class Bridge {
+	public static final Semaphore available = new Semaphore(1);
+	private Farmer southBound, northBound;
+	
+	private class Farmer implements Runnable {
+		private int sleepTime = 1000;
+		
+		public void run() {
+			if(available.tryAcquire()) {
+				try {
+					Thread.sleep(sleepTime);
+					available.release();
+				} catch (Exception e) {
+					System.err.println(e);
+				}
+			}
+		}
+	}
+}

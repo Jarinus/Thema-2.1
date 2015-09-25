@@ -1,0 +1,14 @@
+package nl.jgermeraad;
+
+
+public class BridgeSimulation {
+	private class Bridge {
+		private boolean free;
+		
+		public boolean tryAcquire() {
+			if(free)
+				return true;
+			return false;
+		}
+	}
+}

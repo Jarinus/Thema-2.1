@@ -1,0 +1,32 @@
+package nl.jgermeraad;
+
+
+public class Bridge implements Runnable {
+	public static void main(String[] args) {
+		new Bridge().run();
+	}
+	
+	private static class Farmer {
+		private String name;
+		
+		public Farmer(String name) {
+			this.name = name;
+		}
+	}
+
+	@Override
+	public void run() {
+		//Init
+		Farmer lastFarmer = null,
+				north = new Farmer("Northern farmer"),
+				south = new Farmer("Southern farmer");
+		
+		//Loop the sequence, giving both an equal chance.
+		while(true) {
+			if(lastFarmer == south)
+				north.crossBridge();
+			else
+				south.crossBridge();
+		}
+	}
+}

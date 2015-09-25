@@ -1,0 +1,8 @@
+package nl.jgermeraad;
+
+import java.util.concurrent.Semaphore;
+
+public class Bridge {
+	public static final Semaphore available = new Semaphore(1);
+	private Farmer southBound, northBound;
+}

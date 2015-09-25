@@ -5,25 +5,49 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import org.postgresql.util.PSQLException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * 
  * @author Jari Germeraad
- *
  */
 public class DatabaseHandler {
-	Connection connection;
+	private Connection connection;
+	private String[] queryBuffer;
+	private int bufferCurrent;
 	
 	public DatabaseHandler() {
 		connection = getConnection();
+		queryBuffer = new String[110];
 	}
 	
-	public void writeToDatabase(Document xmlData) {
+	private void addToBuffer(String query) {
+		if(bufferCurrent > 99) {
+			writeBatchToDatabase(queryBuffer);
+			queryBuffer = new String[110];
+			bufferCurrent = 0;
+		}
+		queryBuffer[bufferCurrent] = query;
+	}
+	
+	private void writeBatchToDatabase(String[] queryArray) {
+		try {
+			Statement statement = connection.createStatement();
+			
+			for(String query : queryArray) {
+				statement.addBatch(query);
+			}
+			
+			statement.executeBatch();
+			statement.close();
+		} catch (Exception e) {
+			System.err.println(e);
+		}
+	}
+	
+	public void writeToBuffer(Document xmlData) {
 		//Normalize before we start.
 		xmlData.getDocumentElement().normalize();
 		
@@ -32,20 +56,8 @@ public class DatabaseHandler {
 		for(int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
 			
-			if(node.getNodeType() == Node.ELEMENT_NODE) {
-				Element element = (Element) node;
-				
-				String insertQuery = getInsertQuery(element);
-				
-				try {
-					Statement statement = connection.createStatement();
-					statement.executeUpdate(insertQuery);
-				} catch (PSQLException pe) {
-					//Do nothing.
-				} catch (Exception e) {
-					System.err.println(e);
-				}
-			}
+			if(node.getNodeType() == Node.ELEMENT_NODE)
+				addToBuffer(getInsertQuery((Element)node));
 		}
 	}
 	

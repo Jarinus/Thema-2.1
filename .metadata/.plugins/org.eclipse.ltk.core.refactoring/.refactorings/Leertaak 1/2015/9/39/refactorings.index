@@ -3,3 +3,4 @@
 1443001925535	Rename package 'nl.jgermeraad'
 1443003737064	Delete element
 1443004250075	Rename method 'connect'
+1443168895050	Rename method 'writeToDatabase'

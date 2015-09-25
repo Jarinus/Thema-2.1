@@ -1,0 +1,8 @@
+package nl.jgermeraad;
+
+
+public class BridgeSimulation {
+	private static class Bridge {
+		private boolean free = true;
+	}
+}

@@ -1,0 +1,37 @@
+package nl.jgermeraad;
+
+
+public class BridgeSimulation {
+	private Bridge bridge;
+	
+	public BridgeSimulation() {
+		bridge = new Bridge();
+	}
+	
+	private class Farmer implements Runnable {
+		@Override
+		public void run() {
+			try {
+				while(!bridge.acquire())
+					wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private static class Bridge {
+		private boolean free = true;
+		
+		public synchronized boolean acquire() {
+			if(!free)
+				return false;
+			free = false;
+			return true;
+		}
+		
+		public synchronized void release() {
+			free = true;
+		}
+	}
+}

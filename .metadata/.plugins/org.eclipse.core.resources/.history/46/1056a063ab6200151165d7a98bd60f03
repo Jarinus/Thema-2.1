@@ -1,0 +1,42 @@
+package nl.jgermeraad;
+
+
+public class Bridge {
+	private static BridgeState bridgeState = BridgeState.FREE;
+	
+	public static void main(String[] args) {
+		new Farmer("Southern Tunbridge farmer").run();
+		new Farmer("Northern Tunbridge farmer").run();
+	}
+	
+	private static class Farmer implements Runnable {
+		private int sleepTime = 1000;
+		private String name;
+		
+		public Farmer(String name) {
+			this.name = name;
+		}
+		
+		public void run() {
+			while(true) {
+				synchronized(bridgeState) {
+					try {
+						while(bridgeState == BridgeState.IN_USE) {
+								wait();
+						}
+						bridgeState = BridgeState.IN_USE;
+						System.out.println(name + " is crossing the bridge.");
+						Thread.sleep(sleepTime);
+						bridgeState = BridgeState.FREE;
+					} catch (InterruptedException e) {
+						System.err.println(e);
+					}
+				}
+			}
+		}
+	}
+	
+	private static enum BridgeState {
+		FREE, IN_USE;
+	}
+}

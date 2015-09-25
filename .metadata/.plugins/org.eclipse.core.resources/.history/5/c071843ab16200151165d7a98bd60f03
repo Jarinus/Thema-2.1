@@ -1,0 +1,60 @@
+package nl.jgermeraad;
+
+
+public class BridgeSimulation {
+	private Bridge bridge;
+	private Farmer[] farmers;
+	
+	public static void main(String[] args) {
+		new BridgeSimulation();
+	}
+	
+	public BridgeSimulation() {
+		bridge = new Bridge();
+		farmers = new Farmer[2];
+		farmers[0] = new Farmer("Northern farmer");
+		farmers[0].run();
+		farmers[1] = new Farmer("Southern farmer");
+		farmers[1].run();
+	}
+	
+	private class Farmer implements Runnable {
+		private String name;
+		private int sleepTime;
+		
+		public Farmer(String name) {
+			this.name = name;
+			sleepTime = 1000;
+		}
+		
+		@Override
+		public void run() {
+			synchronized(farmers) {
+			try {
+				while(true) {
+					if(!bridge.acquire())
+						wait();
+					System.out.println("Derp");
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			}
+		}
+	}
+	
+	private static class Bridge {
+		private boolean free = true;
+		
+		public synchronized boolean acquire() {
+			if(!free)
+				return false;
+			free = false;
+			return true;
+		}
+		
+		public synchronized void release() {
+			free = true;
+		}
+	}
+}

@@ -1,0 +1,18 @@
+package nl.jgermeraad;
+
+
+public class Bridge {
+	private Farmer lastFarmer = null;
+	
+	public static void main(String[] args) {
+		
+	}
+	
+	private static class Farmer implements Runnable {
+		@Override
+		public void run() {
+			
+		}
+		
+	}
+}

@@ -1,0 +1,5 @@
+package nl.jgermeraad;
+
+public class Bridge {
+	public static final Semaphore available = new Semaphore(1);
+}

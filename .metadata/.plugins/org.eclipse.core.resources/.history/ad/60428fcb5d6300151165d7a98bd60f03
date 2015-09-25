@@ -1,0 +1,139 @@
+package nl.hanze;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+import org.postgresql.util.PSQLException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+/**
+ * 
+ * @author Jari Germeraad
+ *
+ */
+public class DatabaseHandler {
+	private Connection connection;
+	private String[] queryBuffer;
+	private int bufferCurrent;
+	
+	public DatabaseHandler() {
+		connection = getConnection();
+		queryBuffer = new String[100];
+	}
+	
+	private void addToBuffer(String query) {
+		if(bufferCurrent > 99) {
+			
+		}
+		queryBuffer[bufferCurrent + 1] = query;
+	}
+	
+	public void writeToBuffer(Document xmlData) {
+		//Normalize before we start.
+		xmlData.getDocumentElement().normalize();
+		
+		NodeList list = xmlData.getElementsByTagName("MEASUREMENT");
+		
+		for(int i = 0; i < list.getLength(); i++) {
+			Node node = list.item(i);
+			
+			if(node.getNodeType() == Node.ELEMENT_NODE) {
+				Element element = (Element) node;
+				
+				String insertQuery = getInsertQuery(element);
+				
+				addToBuffer(insertQuery);
+			}
+		}
+	}
+	
+	private String getInsertQuery(Element element) {
+		//Initialize.
+		String insertQuery = "";
+		String[] tagName = {"STN", "DATE", "TIME", "TEMP", "DEWP", "STP",
+							"SLP", "VISIB", "PRCP", "SNDP", "FRSHTT", "CLDC",
+							"WNDDIR", "WDSP"};
+		String[] elements = new String[14];
+		
+		//Check for missing data.
+		String temp = null;
+		for(int i = 0; i < tagName.length; i++) {
+			temp = element.getElementsByTagName(tagName[i]).item(0).getTextContent();
+			if(temp != null)
+				elements[i] = temp;
+			else {
+				try {
+					Statement statement = connection.createStatement();
+					ResultSet result = statement.executeQuery("SELECT min(" + tagName[i].toLowerCase() + ") FROM weatherdata;");
+					elements[i] = result.getString(0);
+				} catch (Exception e) {
+					System.err.println(e);
+				}
+			}
+		}
+		
+		//Create the insert query.
+		insertQuery += "INSERT INTO weatherdata(stn, date, \"time\", temp, dewp, stp, slp, visib, prcp, sndp, frshtt, cldc, wnddir, wdsp) VALUES (";
+		for(int i = 0; i < elements.length; i++) {
+			if(i == 1)
+				insertQuery += "\'" + elements[i] + "\', ";
+			else if(i == 2)
+				insertQuery += "\'" + elements[i] + "\', ";
+			else if(i == 10)
+				insertQuery += "B\'" + elements[i] + "\', ";
+			else if(i == 13)
+				insertQuery += elements[i];
+			else
+				insertQuery += elements[i] + ", ";
+		}
+		insertQuery += ");";
+		
+		return insertQuery;
+	}
+	
+	public void printDataFromXML(Document document) {
+		//Normalize before we start.
+		document.getDocumentElement().normalize();
+		
+		NodeList list = document.getElementsByTagName("MEASUREMENT");
+		
+		for(int i = 0; i < list.getLength(); i++) {
+			Node node = list.item(i);
+			
+			if(node.getNodeType() == Node.ELEMENT_NODE) {
+				Element element = (Element) node;
+				
+				System.out.println("STN: " + element.getElementsByTagName("STN").item(0).getTextContent());
+				System.out.println("DATE: " + element.getElementsByTagName("DATE").item(0).getTextContent());
+				System.out.println("TIME: " + element.getElementsByTagName("TIME").item(0).getTextContent());
+				System.out.println("TEMP: " + element.getElementsByTagName("TEMP").item(0).getTextContent());
+				System.out.println("DEWP: " + element.getElementsByTagName("DEWP").item(0).getTextContent());
+				System.out.println("STP: " + element.getElementsByTagName("STP").item(0).getTextContent());
+				System.out.println("SLP: " + element.getElementsByTagName("SLP").item(0).getTextContent());
+				System.out.println("VISIB: " + element.getElementsByTagName("VISIB").item(0).getTextContent());
+				System.out.println("WDSP: " + element.getElementsByTagName("WDSP").item(0).getTextContent());
+				System.out.println("PRCP: " + element.getElementsByTagName("PRCP").item(0).getTextContent());
+				System.out.println("SNDP: " + element.getElementsByTagName("SNDP").item(0).getTextContent());
+				System.out.println("FRSHTT: " + element.getElementsByTagName("FRSHTT").item(0).getTextContent());
+				System.out.println("CLDC: " + element.getElementsByTagName("CLDC").item(0).getTextContent());
+				System.out.println("WNDDIR: " + element.getElementsByTagName("WNDDIR").item(0).getTextContent());
+			}
+		}
+	}
+	
+	private Connection getConnection() {
+		String  url = "jdbc:postgresql://localhost/leertaak1",
+				user = "postgres",
+				pass = "root";
+		try {
+			return DriverManager.getConnection(url, user, pass);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+}

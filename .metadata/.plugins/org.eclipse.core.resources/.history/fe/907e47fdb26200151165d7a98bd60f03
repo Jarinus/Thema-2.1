@@ -1,0 +1,7 @@
+package nl.jgermeraad;
+
+public class Test {
+	private class TestThread implements Runnable {
+		
+	}
+}

@@ -1,0 +1,17 @@
+package nl.jgermeraad;
+
+
+public class Bridge {
+	private boolean free;
+	
+	private class Farmer implements Runnable {
+
+		@Override
+		public void run() {
+			synchronized(free) {
+				
+			}
+		}
+		
+	}
+}

@@ -1,0 +1,13 @@
+package nl.jgermeraad;
+
+public class Test {
+	private class TestThread implements Runnable {
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+}

@@ -1,0 +1,31 @@
+package nl.jgermeraad;
+
+import java.util.concurrent.Semaphore;
+
+public class Bridge {
+	public static final Semaphore available = new Semaphore(1);
+	private Farmer southBound = new Farmer(),
+			northBound = new Farmer();
+	
+	public static void main(String[] args) {
+		while(true) {
+			
+		}
+	}
+	
+	private class Farmer implements Runnable {
+		private int sleepTime = 1000;
+		
+		public void run() {
+			if(available.tryAcquire()) {
+				try {
+					System.out.println(" is crossing the bridge.");
+					Thread.sleep(sleepTime);
+					available.release();
+				} catch (Exception e) {
+					System.err.println(e);
+				}
+			}
+		}
+	}
+}

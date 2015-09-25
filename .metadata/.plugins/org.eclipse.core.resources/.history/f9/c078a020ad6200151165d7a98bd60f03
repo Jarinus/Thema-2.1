@@ -1,0 +1,19 @@
+package nl.jgermeraad;
+
+
+public class BridgeSimulation {
+	private class Bridge {
+		private Farmer farmer;
+		
+		public boolean acquire(Farmer farmer) {
+			if(this.farmer != null)
+				return false;
+			this.farmer = farmer;
+			return true;
+		}
+		
+		public void release(Farmer farmer) {
+			free = true;
+		}
+	}
+}

@@ -1,0 +1,8 @@
+package nl.jgermeraad;
+
+
+public class Bridge {
+	private class Farmer implements Runnable {
+		
+	}
+}
