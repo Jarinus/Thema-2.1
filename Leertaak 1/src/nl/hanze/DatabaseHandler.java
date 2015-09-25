@@ -2,7 +2,6 @@ package nl.hanze;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 
@@ -14,11 +13,9 @@ import nl.hanze.cache.MeasurementCache;
 public class DatabaseHandler {
 	private static Connection connection;
 	private static ArrayList<String> queryBuffer;
-	public static final int BUFFER_SIZE = 3000;
-	private static String[] databaseTableName = {"stn", "date", "time", "temp",
-			"dewp", "stp", "slp", "visib", "prcp", "sndp", "frshtt",
-			"cldc", "wnddir", "wdsp"};
 	private static MeasurementCache cache;
+	
+	public static final int BUFFER_SIZE = 3000;
 	
 	public DatabaseHandler() {
 		connection = getConnection();
@@ -57,15 +54,8 @@ public class DatabaseHandler {
 	}
 	
 	private static void supplementMeasurementEntry(int index, Measurement measurement) {
-		try {
-			Statement statement = connection.createStatement();
-			String query = "SELECT `" + databaseTableName[index] + "` FROM weatherdata;";
-			ResultSet result = statement.executeQuery(query);
-			measurement.setMeasurement(index, result.getString(0));
-		} catch (Exception e) {
-			System.err.println(e);
-		}
-		
+		double temp = cache.getAverage(Integer.parseInt(measurement.getMeasurement(Measurement.STN)), index);
+		measurement.setMeasurement(index, String.valueOf(temp));
 	}
 	
 	private static void addToBuffer(String query) {
