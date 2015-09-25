@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import nl.hanze.cache.MeasurementCache;
+
 /**
  * @author Jari Germeraad
  */
@@ -16,14 +18,17 @@ public class DatabaseHandler {
 	private static String[] databaseTableName = {"stn", "date", "time", "temp",
 			"dewp", "stp", "slp", "visib", "prcp", "sndp", "frshtt",
 			"cldc", "wnddir", "wdsp"};
+	private static MeasurementCache cache;
 	
 	public DatabaseHandler() {
 		connection = getConnection();
 		queryBuffer = new ArrayList<String>();
+		cache = new MeasurementCache();
 	}
 	
 	public static void add(Measurement measurement) {
 		addToBuffer(createInsertQuery(measurement));
+		cache.add(measurement);
 	}
 	
 	private static String createInsertQuery(Measurement measurement) {
@@ -92,7 +97,7 @@ public class DatabaseHandler {
 	}
 	
 	private Connection getConnection() {
-		String  url = "jdbc:postgresql://localhost/leertaak1",
+		String  url  = "jdbc:postgresql://localhost/leertaak1",
 				user = "postgres",
 				pass = "root";
 		try {

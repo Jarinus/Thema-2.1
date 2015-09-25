@@ -7,6 +7,9 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+/**
+ * @author Jari Germeraad
+ */
 public class DataHandler extends DefaultHandler {
 	String currentTag = null;
 	Measurement measurement = null;

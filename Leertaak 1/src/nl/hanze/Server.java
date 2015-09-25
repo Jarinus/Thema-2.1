@@ -4,9 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * 
  * @author Jari Germeraad
- *
  */
 public class Server {
 	public static final int SOCKET = 7789;
