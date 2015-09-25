@@ -24,9 +24,13 @@ public class IncomingDataHandler implements Runnable {
 
 	@Override
 	public void run() {
-		String input = getInputFromConnection();
-		Document document = getXMLFromString(input);
-		Server.databaseHandler.writeToBuffer(document);
+		String input;
+		Document document;
+		while(true) {
+			input = getInputFromConnection();
+			document = getXMLFromString(input);
+			Server.databaseHandler.writeToBuffer(document);
+		}
 	}
 	
 	private String getInputFromConnection() {
