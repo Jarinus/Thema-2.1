@@ -103,7 +103,6 @@ public class DatabaseHandler {
 		try {
 			return DriverManager.getConnection(url, user, pass);
 		} catch (Exception e) {
-			e.printStackTrace();
 			return null;
 		}
 	}

@@ -51,7 +51,7 @@ public class IncomingDataHandler implements Runnable {
 			try {
 				connection.close();
 			} catch (IOException e) {
-				System.err.println(e);
+				System.err.println();
 			}
 		}
 	}
