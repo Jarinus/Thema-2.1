@@ -4,134 +4,90 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import java.util.ArrayList;
 
 /**
  * @author Jari Germeraad
  */
 public class DatabaseHandler {
-	private Connection connection;
-	private String[] queryBuffer;
-	private int bufferCurrent;
+	private static Connection connection;
+	private static ArrayList<String> queryBuffer;
+	public static final int BUFFER_SIZE = 3000;
+	private static String[] databaseTableName = {"stn", "date", "time", "temp",
+			"dewp", "stp", "slp", "visib", "prcp", "sndp", "frshtt",
+			"cldc", "wnddir", "wdsp"};
 	
 	public DatabaseHandler() {
 		connection = getConnection();
-		queryBuffer = new String[110];
+		queryBuffer = new ArrayList<String>();
 	}
 	
-	private void addToBuffer(String query) {
-		if(bufferCurrent > 99) {
-			writeBatchToDatabase(queryBuffer);
-			queryBuffer = new String[110];
-			bufferCurrent = 0;
+	public static void add(Measurement measurement) {
+		addToBuffer(createInsertQuery(measurement));
+	}
+	
+	private static String createInsertQuery(Measurement measurement) {
+		String insertQuery = "INSERT INTO weatherdata(stn, date, \"time\", temp, dewp, stp, slp, visib, prcp, sndp, frshtt, cldc, wnddir, wdsp) VALUES (";
+		ArrayList<Integer> temp;
+		if((temp = measurement.missingDataRows()).size() > 0) {
+			for(Integer i : temp) {
+				supplementMeasurementEntry(i, measurement);
+			}
 		}
-		queryBuffer[bufferCurrent] = query;
+		insertQuery += measurement.getMeasurement(0) + ", ";
+		insertQuery += "\'" +  measurement.getMeasurement(1) + "\', ";
+		insertQuery += "\'" +  measurement.getMeasurement(2) + "\', ";
+		insertQuery += measurement.getMeasurement(3) + ", ";
+		insertQuery += measurement.getMeasurement(4) + ", ";
+		insertQuery += measurement.getMeasurement(5) + ", ";
+		insertQuery += measurement.getMeasurement(6) + ", ";
+		insertQuery += measurement.getMeasurement(7) + ", ";
+		insertQuery += measurement.getMeasurement(8) + ", ";
+		insertQuery += measurement.getMeasurement(9) + ", ";
+		insertQuery += "B\'" +  measurement.getMeasurement(10) + "\', ";
+		insertQuery += measurement.getMeasurement(11) + ", ";
+		insertQuery += measurement.getMeasurement(12) + ", ";
+		insertQuery += measurement.getMeasurement(13) + ");";
+		return insertQuery;
 	}
 	
-	private void writeBatchToDatabase(String[] queryArray) {
+	private static void supplementMeasurementEntry(int index, Measurement measurement) {
 		try {
 			Statement statement = connection.createStatement();
+			String query = "SELECT `" + databaseTableName[index] + "` FROM weatherdata;";
+			ResultSet result = statement.executeQuery(query);
+			measurement.setMeasurement(index, result.getString(0));
+		} catch (Exception e) {
+			System.err.println(e);
+		}
+		
+	}
+	
+	private static void addToBuffer(String query) {
+		synchronized(queryBuffer) {
+			if(queryBuffer.size() >= BUFFER_SIZE) {
+				writeBatchToDatabase(queryBuffer);
+				queryBuffer = new ArrayList<String>();
+			}
+			queryBuffer.add(query);
+		}
+	}
+	
+	private static void writeBatchToDatabase(ArrayList<String> queryArray) {
+		Statement statement;
+		try {
+			statement = connection.createStatement();
 			
 			for(String query : queryArray) {
+				if(query == null)
+					continue;
 				statement.addBatch(query);
 			}
 			
 			statement.executeBatch();
 			statement.close();
 		} catch (Exception e) {
-			System.err.println(e);
-		}
-	}
-	
-	public void writeToBuffer(Document xmlData) {
-		//Normalize before we start.
-		xmlData.getDocumentElement().normalize();
-		
-		NodeList list = xmlData.getElementsByTagName("MEASUREMENT");
-		
-		for(int i = 0; i < list.getLength(); i++) {
-			Node node = list.item(i);
-			
-			if(node.getNodeType() == Node.ELEMENT_NODE)
-				addToBuffer(getInsertQuery((Element)node));
-		}
-	}
-	
-	private String getInsertQuery(Element element) {
-		//Initialize.
-		String insertQuery = "";
-		String[] tagName = {"STN", "DATE", "TIME", "TEMP", "DEWP", "STP",
-							"SLP", "VISIB", "PRCP", "SNDP", "FRSHTT", "CLDC",
-							"WNDDIR", "WDSP"};
-		String[] elements = new String[14];
-		
-		//Check for missing data.
-		String temp = null;
-		for(int i = 0; i < tagName.length; i++) {
-			temp = element.getElementsByTagName(tagName[i]).item(0).getTextContent();
-			if(temp != null)
-				elements[i] = temp;
-			else {
-				try {
-					Statement statement = connection.createStatement();
-					ResultSet result = statement.executeQuery("SELECT min(" + tagName[i].toLowerCase() + ") FROM weatherdata;");
-					elements[i] = result.getString(0);
-				} catch (Exception e) {
-					System.err.println(e);
-				}
-			}
-		}
-		
-		//Create the insert query.
-		insertQuery += "INSERT INTO weatherdata(stn, date, \"time\", temp, dewp, stp, slp, visib, prcp, sndp, frshtt, cldc, wnddir, wdsp) VALUES (";
-		for(int i = 0; i < elements.length; i++) {
-			if(i == 1)
-				insertQuery += "\'" + elements[i] + "\', ";
-			else if(i == 2)
-				insertQuery += "\'" + elements[i] + "\', ";
-			else if(i == 10)
-				insertQuery += "B\'" + elements[i] + "\', ";
-			else if(i == 13)
-				insertQuery += elements[i];
-			else
-				insertQuery += elements[i] + ", ";
-		}
-		insertQuery += ");";
-		
-		return insertQuery;
-	}
-	
-	public void printDataFromXML(Document document) {
-		//Normalize before we start.
-		document.getDocumentElement().normalize();
-		
-		NodeList list = document.getElementsByTagName("MEASUREMENT");
-		
-		for(int i = 0; i < list.getLength(); i++) {
-			Node node = list.item(i);
-			
-			if(node.getNodeType() == Node.ELEMENT_NODE) {
-				Element element = (Element) node;
-				
-				System.out.println("STN: " + element.getElementsByTagName("STN").item(0).getTextContent());
-				System.out.println("DATE: " + element.getElementsByTagName("DATE").item(0).getTextContent());
-				System.out.println("TIME: " + element.getElementsByTagName("TIME").item(0).getTextContent());
-				System.out.println("TEMP: " + element.getElementsByTagName("TEMP").item(0).getTextContent());
-				System.out.println("DEWP: " + element.getElementsByTagName("DEWP").item(0).getTextContent());
-				System.out.println("STP: " + element.getElementsByTagName("STP").item(0).getTextContent());
-				System.out.println("SLP: " + element.getElementsByTagName("SLP").item(0).getTextContent());
-				System.out.println("VISIB: " + element.getElementsByTagName("VISIB").item(0).getTextContent());
-				System.out.println("WDSP: " + element.getElementsByTagName("WDSP").item(0).getTextContent());
-				System.out.println("PRCP: " + element.getElementsByTagName("PRCP").item(0).getTextContent());
-				System.out.println("SNDP: " + element.getElementsByTagName("SNDP").item(0).getTextContent());
-				System.out.println("FRSHTT: " + element.getElementsByTagName("FRSHTT").item(0).getTextContent());
-				System.out.println("CLDC: " + element.getElementsByTagName("CLDC").item(0).getTextContent());
-				System.out.println("WNDDIR: " + element.getElementsByTagName("WNDDIR").item(0).getTextContent());
-			}
+			e.printStackTrace();
 		}
 	}
 	

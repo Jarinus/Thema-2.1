@@ -15,11 +15,11 @@ public class Server {
 	public static void main(String[] args) {
 		ServerSocket socket = null;
 		try {
-			socket = new ServerSocket(SOCKET);
+			socket = new ServerSocket(SOCKET, 800);
 			Socket connection = null;
 			while(true) {
 				if((connection = socket.accept()) != null) {
-					new IncomingDataHandler(connection).run();
+					new Thread(new IncomingDataHandler(connection)).start();
 				}
 			}
 		} catch (Exception e) {

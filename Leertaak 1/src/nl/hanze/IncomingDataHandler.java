@@ -1,19 +1,19 @@
 package nl.hanze;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.Socket;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
-import org.w3c.dom.Document;
+import nl.hanze.parser.DataHandler;
+
 import org.xml.sax.InputSource;
 /**
- * 
  * @author Jari Germeraad
- *
  */
 public class IncomingDataHandler implements Runnable {
 	private Socket connection;
@@ -24,43 +24,35 @@ public class IncomingDataHandler implements Runnable {
 
 	@Override
 	public void run() {
-		String input;
-		Document document;
-		while(true) {
-			input = getInputFromConnection();
-			document = getXMLFromString(input);
-			Server.databaseHandler.writeToBuffer(document);
-		}
-	}
-	
-	private String getInputFromConnection() {
-		String input = "";
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		SAXParser parser = null;
+		DataHandler handler = null;
+		BufferedReader reader = null;
+		StringBuilder builder = null;
 		try {
-			//Grab XML data.
-			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			
-			String line = null;
-			
-			while((line = in.readLine()) != null) {
-				input += line;
-				if(line.contains("</WEATHERDATA>"))
-					break;
+			parser = factory.newSAXParser();
+			handler = new DataHandler();
+			while(true) {
+				reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+				builder = null;
+				for (String line; (line = reader.readLine()) != null;) {
+				    if (line.contains("<?xml")) {
+				        if (builder != null) {
+				            parser.parse(new InputSource(new StringReader(builder.toString())), handler);
+				        }
+				        builder = new StringBuilder();
+				    }
+				    builder.append(line);
+				}
 			}
 		} catch (Exception e) {
-			System.err.println(e);
-		}
-		return input;
-	}
-	
-	private Document getXMLFromString(String xmlString) {
-		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			InputSource input = new InputSource(new StringReader(xmlString));
-			return builder.parse(input);
-		} catch (Exception e) {
-			System.err.println(e);
-			return null;
+			e.printStackTrace();
+		} finally {
+			try {
+				connection.close();
+			} catch (IOException e) {
+				System.err.println();
+			}
 		}
 	}
 }
