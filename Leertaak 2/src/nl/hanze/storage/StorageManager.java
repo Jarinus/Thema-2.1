@@ -1,0 +1,53 @@
+package nl.hanze.storage;
+
+import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
+import nl.hanze.Measurement;
+import nl.hanze.cache.MeasurementCache;
+
+/**
+ * @author Jari Germeraad
+ */
+public class StorageManager {
+	private static MeasurementCache cache;
+	private static BlockingQueue<Measurement> bq;
+	
+	public static final int BUFFER_SIZE = 3000;
+	
+	public StorageManager() {
+		bq = new ArrayBlockingQueue<Measurement>(BUFFER_SIZE);
+		cache = new MeasurementCache();
+	}
+	
+	private static void writeToStorage(Measurement measurement) throws InterruptedException {
+		bq.put(measurement);
+		cache.add(measurement);
+		if(bq.size() >= BUFFER_SIZE) {
+			new Thread(new StorageUnit(bq)).start();
+			bq = new ArrayBlockingQueue<Measurement>(BUFFER_SIZE);
+		}
+	}
+	
+	public static void add(Measurement measurement) {
+		try {
+			writeToStorage(supplementMeasurement(measurement));
+		} catch (InterruptedException e) {
+			System.err.println("Could not add measurement.");
+		}
+	}
+	
+	private static Measurement supplementMeasurement(Measurement measurement) {
+		ArrayList<Integer> temp;
+		if((temp = measurement.missingDataRows()).size() > 0)
+			for(Integer i : temp)
+				supplementMeasurementEntry(i, measurement);
+		return measurement;
+	}
+	
+	private static void supplementMeasurementEntry(int index, Measurement measurement) {
+		double temp = cache.getAverage(Integer.parseInt(measurement.getMeasurement(Measurement.STN)), index);
+		measurement.setMeasurement(index, String.valueOf(temp));
+	}
+}

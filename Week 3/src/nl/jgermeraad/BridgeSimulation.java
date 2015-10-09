@@ -1,17 +1,17 @@
 package nl.jgermeraad;
 
+import java.util.concurrent.Semaphore;
+
 
 public class BridgeSimulation {
-	private Bridge bridge;
-	private Object lock;
+	private Semaphore bridge;
 	
 	public static void main(String[] args) {
 		new BridgeSimulation();
 	}
 	
 	public BridgeSimulation() {
-		bridge = new Bridge();
-		lock = new Object();
+		bridge = new Semaphore(1, true);
 		new Thread(new Farmer("Northern farmer")).start();
 		new Thread(new Farmer("Southern farmer")).start();
 	}
@@ -28,34 +28,15 @@ public class BridgeSimulation {
 		@Override
 		public void run() {
 			try {
-				synchronized(lock) {
-					while(true) {
-						if(!bridge.acquire())
-							lock.wait();
-						System.out.println(name + " is crossing the bridge.");
-						Thread.sleep(sleepTime);
-						bridge.release();
-						lock.notify();
-					}
+				while(true) {
+					bridge.acquire();
+					System.out.println(name + " is crossing the bridge.");
+					Thread.sleep(sleepTime);
+					bridge.release();
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}
-	}
-	
-	private static class Bridge {
-		private boolean free = true;
-		
-		public synchronized boolean acquire() {
-			if(!free)
-				return false;
-			free = false;
-			return true;
-		}
-		
-		public synchronized void release() {
-			free = true;
 		}
 	}
 }
