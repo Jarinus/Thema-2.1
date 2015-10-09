@@ -64,7 +64,7 @@ public class StorageUnit implements Runnable {
 	private String convertToString(Measurement m) {
 		String temp = "";
 		
-		temp += "\t";
+		temp += "\n";
 		for(int i = 0; i < 14; i++) {
 			temp += m.getMeasurement(i);
 			if(i != 13) {
@@ -78,7 +78,7 @@ public class StorageUnit implements Runnable {
 	}
 	
 	private void write(String data) throws IOException {
-		BufferedWriter out = new BufferedWriter(new FileWriter(storageFile));
+		BufferedWriter out = new BufferedWriter(new FileWriter(storageFile, true));
 		
 		out.write(data);
 		out.flush();
