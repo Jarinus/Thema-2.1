@@ -34,6 +34,8 @@ public class StorageUnit implements Runnable {
 
 		Measurement m;
 		
+		long counterTime = 0;
+		
 		while (queue.size() > 0) {
 			m = null;
 
@@ -41,12 +43,16 @@ public class StorageUnit implements Runnable {
 				m = queue.take();
 			} catch (InterruptedException e) {
 			}
-			System.out.println("count start: " + System.nanoTime());
-			final long startCount = System.nanoTime();
+			long startCount = System.nanoTime();
+			
 			toWrite += convertToString(m);
-			final long endCount = System.nanoTime();
-			System.out.println("count end: " + System.nanoTime());
+			long endCount = System.nanoTime();
+			System.out.println("count start: " + startCount);
+			System.out.println("count end: " + endCount);
+			counterTime = endCount - startCount;
+			
 		}
+		System.out.println("counterTime = " + counterTime);
 		
 		
 		//System.out.println(toWrite);
