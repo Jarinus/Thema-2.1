@@ -1,0 +1,64 @@
+package nl.hanze;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.Socket;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import nl.hanze.parser.DataHandler;
+
+import org.xml.sax.InputSource;
+/**
+ * @author Jari Germeraad
+ */
+public class IncomingDataHandler implements Runnable {
+	private Socket connection;
+	
+	public IncomingDataHandler(Socket connection) {
+		this.connection = connection;
+	}
+
+	@Override
+	public void run() {
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		SAXParser parser = null;
+		DataHandler handler = null;
+		BufferedReader reader = null;
+		StringBuilder builder = null;
+		try {
+			parser = factory.newSAXParser();
+			handler = new DataHandler();
+			long fullTime = 0;
+			while(true) {
+				final long start = System.nanoTime();
+				reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+				builder = null;
+				for (String line; (line = reader.readLine()) != null;) {
+				    if (line.contains("<?xml")) {
+				        if (builder != null) {
+				            parser.parse(new InputSource(new StringReader(builder.toString())), handler);
+				        }
+				        builder = new StringBuilder();
+				    }
+				    builder.append(line);
+				}
+				final long end = System.nanoTime();
+				fullTime += (end - start);
+				System.out.println("IncomingDataHandler.run() took: " + ((end - start)) + " nanoseconds");
+			}
+			System.out.println("FullTime took: " + fullTime + " nanoseconds");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				connection.close();
+			} catch (IOException e) {
+				System.err.println(e);
+			}
+		}
+	}
+}
