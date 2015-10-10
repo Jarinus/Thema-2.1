@@ -4,8 +4,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import nl.hanze.Measurement;
 
@@ -35,7 +40,7 @@ public class StorageUnit implements Runnable {
 		Measurement m;
 		
 		long counterTime = 0;
-		
+		int measurements = 0;
 		while (queue.size() > 0) {
 			m = null;
 
@@ -47,13 +52,16 @@ public class StorageUnit implements Runnable {
 			
 			toWrite += convertToString(m);
 			long endCount = System.nanoTime();
-			System.out.println("count start: " + startCount);
-			System.out.println("count end: " + endCount);
-			counterTime = endCount - startCount;
 			
+			counterTime = endCount - startCount;
+			measurements++;
 		}
-		System.out.println("counterTime = " + counterTime);
-		
+		System.out.println("Time it took: " + counterTime);
+		System.out.println("Measurments: " + measurements);	
+		// realtime
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		Date date = new Date();
+		System.out.println(dateFormat.format(date));
 		
 		//System.out.println(toWrite);
 
